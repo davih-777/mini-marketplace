@@ -8,49 +8,47 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import java.time.OffsetDateTime;
 import lombok.Data;
 import org.hibernate.annotations.UpdateTimestamp;
 
-import java.time.OffsetDateTime;
-
 @Entity
-@Table(name = "address")
+@Table(name = "addresses")
 @Data
 public class Address {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+  @Id
+  @GeneratedValue(strategy = GenerationType.IDENTITY)
+  private Long id;
 
-    @ManyToOne
-    @JoinColumn(name = "user_id")
-    private User user;
+  @ManyToOne
+  @JoinColumn(name = "user_id")
+  private User user;
 
-    @Column(nullable = false)
-    private String street;
+  @Column(nullable = false)
+  private String street;
 
-    private String number;
+  private String number;
 
-    private String complement;
+  private String complement;
 
-    private String neighborhood;
+  private String neighborhood;
 
-    @Column(nullable = false)
-    private String city;
+  @Column(nullable = false)
+  private String city;
 
-    @Column(nullable = false)
-    private String state;
+  @Column(nullable = false)
+  private String state;
 
-    @Column(nullable = false)
-    private String country;
+  @Column(nullable = false)
+  private String country;
 
-    @Column(nullable = false)
-    private String zipCode;
+  @Column(nullable = false)
+  private String zipCode;
 
-    private Boolean isDefault;
+  private Boolean isDefault;
 
-    private OffsetDateTime createdAt;
+  private OffsetDateTime createdAt;
 
-    @UpdateTimestamp
-    private OffsetDateTime updatedAt;
+  @UpdateTimestamp private OffsetDateTime updatedAt;
 }
