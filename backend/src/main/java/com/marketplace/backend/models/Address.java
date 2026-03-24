@@ -1,4 +1,4 @@
-package com.market.backend.models;
+package com.marketplace.backend.models;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;

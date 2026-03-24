@@ -1,6 +1,6 @@
-package com.market.backend.models;
+package com.marketplace.backend.models;
 
-import com.market.backend.enums.OrderStatus;
+import com.marketplace.backend.enums.OrderStatus;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;

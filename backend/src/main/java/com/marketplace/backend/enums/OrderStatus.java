@@ -1,4 +1,4 @@
-package com.market.backend.enums;
+package com.marketplace.backend.enums;
 
 public enum OrderStatus {
     CREATED,

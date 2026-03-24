@@ -1,13 +1,13 @@
-package com.market.backend;
+package com.marketplace.backend;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
-public class Application {
+public class MiniMarketplaceApplication {
 
 	public static void main(String[] args) {
-		SpringApplication.run(Application.class, args);
+		SpringApplication.run(MiniMarketplaceApplication.class, args);
 	}
 
 }
