@@ -1,0 +1,19 @@
+# Java / Backend
+backend/target/
+backend/.mvn/
+backend/*.jar
+
+# Node / Frontend
+frontend/node_modules/
+frontend/.next/
+frontend/out/
+frontend/build/
+
+# IDEs
+.idea/
+.vscode/
+*.swp
+
+# Default ignored files
+/shelf/
+/workspace.xml
