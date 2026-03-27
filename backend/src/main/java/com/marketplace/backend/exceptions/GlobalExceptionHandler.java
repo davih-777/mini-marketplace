@@ -1,10 +1,13 @@
 package com.marketplace.backend.exceptions;
 
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import java.time.LocalDateTime;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -43,7 +46,23 @@ public class GlobalExceptionHandler {
   @ExceptionHandler(UsernameNotFoundException.class)
   public ResponseEntity<CustomErrorResponse> handleUserNotFound(
       UsernameNotFoundException ex, HttpServletRequest request) {
-    return buildResponse(HttpStatus.UNAUTHORIZED, "E-mail or password does not match.", request);
+    return buildResponse(HttpStatus.UNAUTHORIZED, "Invalid email.", request);
+  }
+
+  @ExceptionHandler(InvalidTokenException.class)
+  public ResponseEntity<CustomErrorResponse> handleTokenExpired(
+      InvalidTokenException ex, HttpServletRequest request, HttpServletResponse response) {
+    ResponseCookie cleanCookie =
+        ResponseCookie.from("refreshToken", "")
+            .httpOnly(true)
+            .secure(false) // should be true in prod environment
+            .path("/")
+            .maxAge(0)
+            .sameSite("Strict")
+            .build();
+    response.addHeader(HttpHeaders.SET_COOKIE, cleanCookie.toString());
+
+    return buildResponse(HttpStatus.UNAUTHORIZED, ex.getMessage(), request);
   }
 
   @ExceptionHandler(Exception.class)

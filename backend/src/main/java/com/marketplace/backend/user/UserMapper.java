@@ -1,7 +1,5 @@
 package com.marketplace.backend.user;
 
-import static com.marketplace.backend.user.auth.jwt.JWTService.ONE_DAY_MILLIS;
-
 import com.marketplace.backend.enums.UserRole;
 import com.marketplace.backend.models.User;
 import com.marketplace.backend.user.dto.UserRegistrationDTO;
@@ -26,12 +24,8 @@ public class UserMapper {
         .build();
   }
 
-  public UserResponseDTO toDTO(User user, String token) {
+  public UserResponseDTO toDTO(User user, String accessToken) {
     return new UserResponseDTO(
-        user.getId(),
-        user.getName(),
-        user.getEmail(),
-        user.getRole(),
-        new UserResponseDTO.TokenDTO(token, "Bearer", ONE_DAY_MILLIS));
+        user.getId(), user.getName(), user.getEmail(), user.getRole(), accessToken);
   }
 }

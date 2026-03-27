@@ -1,5 +1,6 @@
 package com.marketplace.backend.user;
 
+import com.marketplace.backend.exceptions.InvalidTokenException;
 import com.marketplace.backend.models.User;
 import com.marketplace.backend.user.auth.UserAuthService;
 import com.marketplace.backend.user.auth.UserDetailsImpl;
@@ -8,9 +9,11 @@ import com.marketplace.backend.user.dto.UserAuthDTO;
 import com.marketplace.backend.user.dto.UserRegistrationDTO;
 import com.marketplace.backend.user.dto.UserResponseDTO;
 import jakarta.transaction.Transactional;
+import org.springframework.http.ResponseCookie;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -46,9 +49,11 @@ public class UserService {
 
     User persistedUser = repository.save(user);
     userAuthService.saveUserAuth(user, encryptedPassword);
-    String token = generateToken(user);
 
-    return mapper.toDTO(persistedUser, token);
+    String accessToken =
+        jwtService.generateAccessToken(persistedUser.getEmail(), persistedUser.getRole());
+
+    return mapper.toDTO(persistedUser, accessToken);
   }
 
   public UserResponseDTO verify(UserAuthDTO dto) {
@@ -58,12 +63,33 @@ public class UserService {
 
     UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
     User user = userDetails.getUser();
-    String token = generateToken(user);
 
-    return mapper.toDTO(user, token);
+    String accessToken = jwtService.generateAccessToken(user.getEmail(), user.getRole());
+
+    return mapper.toDTO(user, accessToken);
   }
 
-  public String generateToken(User user) {
-    return jwtService.generateToken(user);
+  public ResponseCookie generateAuthCookie(String email) {
+    String refreshToken = jwtService.generateRefreshToken(email);
+    return ResponseCookie.from("refreshToken", refreshToken)
+        .httpOnly(true)
+        .secure(false) // must be true in production environment
+        .path("/")
+        .maxAge(604800) // 7 days
+        .sameSite("Strict")
+        .build();
+  }
+
+  public UserResponseDTO refresh(String refreshToken) {
+    if (jwtService.validateRefreshToken(refreshToken)) {
+      String email = jwtService.extractEmailFromToken(refreshToken);
+      User user =
+          repository.findByEmail(email).orElseThrow(() -> new UsernameNotFoundException(email));
+      String accessToken = jwtService.generateAccessToken(user.getEmail(), user.getRole());
+
+      return mapper.toDTO(user, accessToken);
+    } else {
+      throw new InvalidTokenException("Token is not valid.");
+    }
   }
 }

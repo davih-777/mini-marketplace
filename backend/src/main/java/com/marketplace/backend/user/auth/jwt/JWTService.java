@@ -1,6 +1,6 @@
 package com.marketplace.backend.user.auth.jwt;
 
-import com.marketplace.backend.models.User;
+import com.marketplace.backend.enums.UserRole;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
@@ -14,7 +14,8 @@ import org.springframework.stereotype.Service;
 @Service
 public class JWTService {
 
-  public static final Integer ONE_DAY_MILLIS = 86400000;
+  public static final Integer ACCESS_TOKEN_EXPIRATION = 900000; // 15 minutes
+  public static final Integer REFRESH_TOKEN_EXPIRATION = 604800000; // 7 days
 
   @Value("${application.name}")
   private String appName;
@@ -22,16 +23,25 @@ public class JWTService {
   @Value("${token.generation.secret}")
   private String secret;
 
-  public String generateToken(User user) {
-    SecretKey key = getGenerationSecretToken();
-
+  public String generateAccessToken(String email, UserRole role) {
     return Jwts.builder()
         .issuer(appName)
-        .subject(user.getEmail())
-        .claim("role", user.getRole().name())
+        .subject(email)
+        .claim("role", role.name())
         .issuedAt(new Date())
-        .expiration(new Date(System.currentTimeMillis() + ONE_DAY_MILLIS))
-        .signWith(key)
+        .expiration(new Date(System.currentTimeMillis() + ACCESS_TOKEN_EXPIRATION))
+        .signWith(getGenerationSecretToken())
+        .compact();
+  }
+
+  public String generateRefreshToken(String email) {
+    return Jwts.builder()
+        .issuer(appName)
+        .subject(email)
+        .claim("type", "refresh")
+        .issuedAt(new Date())
+        .expiration(new Date(System.currentTimeMillis() + REFRESH_TOKEN_EXPIRATION))
+        .signWith(getGenerationSecretToken())
         .compact();
   }
 
@@ -40,9 +50,19 @@ public class JWTService {
     return claims.getSubject();
   }
 
-  public boolean validateToken(String token, UserDetails userDetails) {
+  public boolean validateAccessToken(String token, UserDetails userDetails) {
     String email = extractEmailFromToken(token);
     return (email.equals(userDetails.getUsername()) && !isTokenExpired(token));
+  }
+
+  public boolean validateRefreshToken(String token) {
+    try {
+      Claims claims = extractAllClaims(token);
+      String tokenType = claims.get("type", String.class);
+      return "refresh".equals(tokenType) && !isTokenExpired(token);
+    } catch (Exception e) {
+      return false;
+    }
   }
 
   private boolean isTokenExpired(String token) {
