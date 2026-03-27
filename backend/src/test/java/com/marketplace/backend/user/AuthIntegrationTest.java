@@ -9,9 +9,8 @@ import com.marketplace.backend.exceptions.CustomErrorResponse;
 import com.marketplace.backend.user.dto.UserAuthDTO;
 import com.marketplace.backend.user.dto.UserRegistrationDTO;
 import com.marketplace.backend.user.dto.UserResponseDTO;
-import java.time.LocalDate;
-
 import jakarta.servlet.http.Cookie;
+import java.time.LocalDate;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -165,79 +164,76 @@ public class AuthIntegrationTest {
     assertEquals("E-mail or password does not match.", error.getMessage());
   }
 
-    @Test
-    void refreshTokenSuccess() throws Exception {
-        UserRegistrationDTO registrationDTO =
-                new UserRegistrationDTO(
-                        "Mock Name", "mock-email@test.com", "mockpass123", LocalDate.of(1999, 11, 11));
+  @Test
+  void refreshTokenSuccess() throws Exception {
+    UserRegistrationDTO registrationDTO =
+        new UserRegistrationDTO(
+            "Mock Name", "mock-email@test.com", "mockpass123", LocalDate.of(1999, 11, 11));
 
-        userService.register(registrationDTO);
+    userService.register(registrationDTO);
 
-        UserAuthDTO authDTO = new UserAuthDTO(registrationDTO.email(), registrationDTO.password());
-        var loginResponse =
-                mockMvc
-                        .perform(
-                                post("/auth/login")
-                                        .contentType(MediaType.APPLICATION_JSON)
-                                        .content(objectMapper.writeValueAsString(authDTO)))
-                        .andExpect(status().isOk())
-                        .andReturn();
+    UserAuthDTO authDTO = new UserAuthDTO(registrationDTO.email(), registrationDTO.password());
+    var loginResponse =
+        mockMvc
+            .perform(
+                post("/auth/login")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(objectMapper.writeValueAsString(authDTO)))
+            .andExpect(status().isOk())
+            .andReturn();
 
-        Cookie refreshCookie = loginResponse.getResponse().getCookie("refreshToken");
+    Cookie refreshCookie = loginResponse.getResponse().getCookie("refreshToken");
 
-        var refreshResponse =
-                mockMvc
-                        .perform(
-                                post("/auth/refresh")
-                                        .cookie(refreshCookie)
-                                        .contentType(MediaType.APPLICATION_JSON))
-                        .andExpect(status().isOk())
-                        .andReturn();
+    var refreshResponse =
+        mockMvc
+            .perform(
+                post("/auth/refresh").cookie(refreshCookie).contentType(MediaType.APPLICATION_JSON))
+            .andExpect(status().isOk())
+            .andReturn();
 
-        UserResponseDTO responseDTO =
-                objectMapper.readValue(refreshResponse.getResponse().getContentAsString(), UserResponseDTO.class);
+    UserResponseDTO responseDTO =
+        objectMapper.readValue(
+            refreshResponse.getResponse().getContentAsString(), UserResponseDTO.class);
 
-        assertEquals(registrationDTO.email(), responseDTO.email());
-        assertEquals(UserRole.ROLE_USER, responseDTO.role());
-        assertNotNull(responseDTO.accessToken());
-    }
+    assertEquals(registrationDTO.email(), responseDTO.email());
+    assertEquals(UserRole.ROLE_USER, responseDTO.role());
+    assertNotNull(responseDTO.accessToken());
+  }
 
-    @Test
-    void refreshTokenFail() throws Exception {
-        UserRegistrationDTO registrationDTO =
-                new UserRegistrationDTO(
-                        "Mock Name", "mock-email@test.com", "mockpass123", LocalDate.of(1999, 11, 11));
+  @Test
+  void refreshTokenFail() throws Exception {
+    UserRegistrationDTO registrationDTO =
+        new UserRegistrationDTO(
+            "Mock Name", "mock-email@test.com", "mockpass123", LocalDate.of(1999, 11, 11));
 
-        userService.register(registrationDTO);
+    userService.register(registrationDTO);
 
-        UserAuthDTO authDTO = new UserAuthDTO(registrationDTO.email(), registrationDTO.password());
-        var loginResponse =
-                mockMvc
-                        .perform(
-                                post("/auth/login")
-                                        .contentType(MediaType.APPLICATION_JSON)
-                                        .content(objectMapper.writeValueAsString(authDTO)))
-                        .andExpect(status().isOk())
-                        .andReturn();
+    UserAuthDTO authDTO = new UserAuthDTO(registrationDTO.email(), registrationDTO.password());
+    var loginResponse =
+        mockMvc
+            .perform(
+                post("/auth/login")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(objectMapper.writeValueAsString(authDTO)))
+            .andExpect(status().isOk())
+            .andReturn();
 
-        Cookie refreshCookie = loginResponse.getResponse().getCookie("refreshToken");
+    Cookie refreshCookie = loginResponse.getResponse().getCookie("refreshToken");
 
-        refreshCookie.setValue(refreshCookie.getValue() + "invalid");
+    refreshCookie.setValue(refreshCookie.getValue() + "invalid");
 
-        var refreshResponse =
-                mockMvc
-                        .perform(
-                                post("/auth/refresh")
-                                        .cookie(refreshCookie)
-                                        .contentType(MediaType.APPLICATION_JSON))
-                        .andExpect(status().isUnauthorized())
-                        .andReturn();
+    var refreshResponse =
+        mockMvc
+            .perform(
+                post("/auth/refresh").cookie(refreshCookie).contentType(MediaType.APPLICATION_JSON))
+            .andExpect(status().isUnauthorized())
+            .andReturn();
 
-        CustomErrorResponse error =
-                objectMapper.readValue(
-                        refreshResponse.getResponse().getContentAsString(), CustomErrorResponse.class);
+    CustomErrorResponse error =
+        objectMapper.readValue(
+            refreshResponse.getResponse().getContentAsString(), CustomErrorResponse.class);
 
-        assertEquals("Token is not valid.", error.getMessage());
-        assertEquals("", refreshResponse.getResponse().getCookie("refreshToken").getValue());
-    }
+    assertEquals("Token is not valid.", error.getMessage());
+    assertEquals("", refreshResponse.getResponse().getCookie("refreshToken").getValue());
+  }
 }
